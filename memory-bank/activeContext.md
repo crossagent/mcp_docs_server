@@ -9,17 +9,18 @@
 
 - Established the core Memory Bank structure and `.clinerules`.
 - Confirmed the use of Python and the `mcp` library (`FastMCP`).
-- **Finalized Plan:** Use local storage (`data/` directory) for both documentation structure (`structure.json`) and content (`.md` files). Access will be provided via an MCP tool (`get_docs_structure`) and dynamic MCP resources mapping URIs to local files. Manual population initially, with a future plan for an automated update tool.
+- **Revised Plan:** Instead of manually creating `structure.json`, we created a Python script (`scripts/scrape_structure.py`) to automatically scrape the documentation structure from `modelcontextprotocol.io`.
+- Added `requests` and `beautifulsoup4` dependencies to `pyproject.toml` and installed them using `uv pip install`.
+- Successfully executed `scripts/scrape_structure.py` to generate `data/structure.json`.
 - Identified the existing `server.py` as the starting point for implementation.
-- Updated `projectbrief.md`, `productContext.md`, `systemPatterns.md`, `techContext.md` to reflect the finalized plan.
+- Updated `projectbrief.md`, `productContext.md`, `systemPatterns.md`, `techContext.md` previously to reflect the initial plan. *Note: These might need minor updates later to reflect the scraper approach.*
 
-## Next Steps (Phase 1 Implementation)
+## Next Steps (Phase 1 Implementation - Revised)
 
-1.  **Create `data/` Directory Structure:** Create the main `data/` directory and any necessary subdirectories based on the website's navigation structure (e.g., `data/concepts`, `data/tutorials`).
-2.  **Create `structure.json`:** Create the `data/structure.json` file. Manually populate it with the hierarchical structure derived from the `modelcontextprotocol.io` website's navigation sidebar. Define the `title` and `path` for each entry.
-3.  **Populate Content Files:** Manually create and populate the initial Markdown (`.md`) files within the `data/` directory structure, corresponding to the paths defined in `structure.json` (e.g., `data/introduction.md`, `data/concepts/tools.md`). Start with key pages like Introduction, Quickstart, Concepts overview, etc.
-4.  **Implement `get_docs_structure` Tool:** Modify `server.py`:
-    - Remove existing example code.
+1.  **Create `data/` Directory Structure:** Create the main `data/` directory and any necessary subdirectories based on the structure defined in the *generated* `data/structure.json` (e.g., `data/concepts`, `data/tutorials`, `data/quickstart`). *(This step might be partially done already based on file list)*.
+2.  **Populate Content Files:** Manually create and populate the initial Markdown (`.md`) files within the `data/` directory structure, corresponding to the paths defined in `data/structure.json` (e.g., `data/introduction.md`, `data/concepts/tools.md`). Start with key pages like Introduction, Quickstart pages, Concepts overview, etc.
+3.  **Implement `get_docs_structure` Tool:** Modify `server.py`:
+    - Remove existing example code (if any).
     - Implement the `get_docs_structure` tool using `@mcp.tool` to read and return the content of `data/structure.json`.
 5.  **Implement Dynamic Resource Handling:** Modify `server.py`:
     - Implement the logic to handle resource requests like `mcp://docs/...`.
@@ -32,7 +33,7 @@
 
 ## Active Considerations & Questions
 
-- **`structure.json` Format:** Ensure a consistent and useful format for `structure.json` (e.g., nested objects with `title` and `path` keys).
+- **Scraper Robustness:** The `scripts/scrape_structure.py` script depends on the website's current HTML structure. Future website changes might break the script.
 - **Manual Population Scope:** Decide which key pages are essential to populate manually for Phase 1.
 - **Dynamic Resource Implementation:** Determine the best way to implement dynamic resource handling within `FastMCP` (e.g., overriding methods, using FastAPI's routing directly if accessible).
 - **Error Handling:** Implement robust error handling for file not found (in resources) and potential JSON parsing errors (in the tool).
