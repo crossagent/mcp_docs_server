@@ -1,0 +1,12 @@
+# Cline Rules: mcp-docs-server Project
+
+## Communication Language
+
+- **Preferred Language:** Please use Chinese (中文) for all communication and documentation unless otherwise specified.
+
+## Python Development Standards
+
+- **Mandatory Type Hints:** All Python function definitions **MUST** include type hints for all their parameters and return values. This aids static code analysis, improves code clarity, and reduces potential type errors.
+  - *Example:* `def process_data(data: list[str], threshold: int) -> dict[str, int]:`
+
+- **Recommended Docstrings:** While type hints are mandatory, clear docstrings are still highly recommended for functions with complex logic to explain their purpose, parameter meanings, return values, and any potential exceptions raised.

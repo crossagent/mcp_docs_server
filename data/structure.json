@@ -1,0 +1,30 @@
+[
+  {
+    "title": "Get Started",
+    "children": [
+      { "title": "Introduction", "path": "introduction" },
+      { "title": "Quickstart", "path": "quickstart" },
+      { "title": "Example Servers", "path": "example-servers" },
+      { "title": "Example Clients", "path": "example-clients" }
+    ]
+  },
+  {
+    "title": "Tutorials",
+    "children": [
+      { "title": "Building MCP with LLMs", "path": "tutorials/building-mcp-with-llms" },
+      { "title": "Debugging", "path": "tutorials/debugging" },
+      { "title": "Inspector", "path": "tutorials/inspector" }
+    ]
+  },
+  {
+    "title": "Concepts",
+    "children": [
+      { "title": "Core architecture", "path": "concepts/core-architecture" },
+      { "title": "Resources", "path": "concepts/resources" },
+      { "title": "Prompts", "path": "concepts/prompts" },
+      { "title": "Tools", "path": "concepts/tools" },
+      { "title": "Sampling", "path": "concepts/sampling" },
+      { "title": "Roots", "path": "concepts/roots" }
+    ]
+  }
+]
