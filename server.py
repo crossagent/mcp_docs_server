@@ -53,7 +53,8 @@ def get_introduction_statically() -> Resource:
         raise FileNotFoundError(f"Static resource file not found: {file_path}")
     try:
         content = file_path.read_text(encoding="utf-8")
-        return Resource(uri=full_uri, content=content, content_type="text/markdown")
+        # Add the required 'name' parameter
+        return Resource(name=doc_path, uri=full_uri, content=content, content_type="text/markdown")
     except Exception as e:
         # Simplified error handling for static example
         raise IOError(f"Could not read static resource file {file_path}: {e}")
