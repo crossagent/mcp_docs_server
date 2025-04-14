@@ -3,6 +3,7 @@ import json
 import sys
 from bs4 import BeautifulSoup, Tag
 from typing import List, Dict, Optional, Any
+from urllib.parse import urljoin
 
 def extract_structure(soup: BeautifulSoup) -> List[Dict[str, Any]]:
     """
@@ -14,6 +15,7 @@ def extract_structure(soup: BeautifulSoup) -> List[Dict[str, Any]]:
     Returns:
         A list of dictionaries representing the navigation structure.
     """
+    base_url: str = "https://modelcontextprotocol.io"
     structure: List[Dict[str, Any]] = []
     nav_items_div = soup.find('div', id='navigation-items')
 
@@ -56,19 +58,20 @@ def extract_structure(soup: BeautifulSoup) -> List[Dict[str, Any]]:
 
             if link:
                 title = link.get_text(strip=True)
-                path = link['href']
-                item = {"title": title, "path": path}
+                relative_path = link['href']
+                full_url = urljoin(base_url, relative_path)
+                item = {"title": title, "path": full_url}
                 current_group["children"].append(item)
-                print(f"Debug: Added item: {title} ({path})", file=sys.stderr)
+                print(f"Debug: Added item: {title} ({full_url})", file=sys.stderr)
             elif div_toggle:
                  # Handle expandable groups like Quickstart - needs manual mapping for now
                  title = div_toggle.get_text(strip=True)
                  if title == "Quickstart":
                      print(f"Debug: Handling special case: {title}", file=sys.stderr)
                      quickstart_group = {"title": title, "children": [
-                         {"title": "For Server Developers", "path": "/quickstart/server"},
-                         {"title": "For Client Developers", "path": "/quickstart/client"},
-                         {"title": "For Claude Desktop Users", "path": "/quickstart/user"}
+                         {"title": "For Server Developers", "path": urljoin(base_url, "/quickstart/server")},
+                         {"title": "For Client Developers", "path": urljoin(base_url, "/quickstart/client")},
+                         {"title": "For Claude Desktop Users", "path": urljoin(base_url, "/quickstart/user")}
                      ]}
                      current_group["children"].append(quickstart_group)
                  else:
