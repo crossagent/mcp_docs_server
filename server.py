@@ -57,6 +57,7 @@ def get_doc_structure():
 def find_doc_path(doc_name: str) -> Optional[str]:
     """
     Find the document path by its name in the structure.json.
+    Performs case-insensitive search.
     
     Args:
         doc_name: The document name to search for
@@ -65,11 +66,13 @@ def find_doc_path(doc_name: str) -> Optional[str]:
         The path if found, None otherwise
     """
     structure = get_doc_structure()
+    # 转换为小写以支持大小写不敏感搜索
+    doc_name_lower = doc_name.lower()
     
     def search_in_section(items):
         for item in items:
-            # Check if this item matches
-            if item.get("title") == doc_name and "path" in item:
+            # 使用小写比较来实现大小写不敏感搜索
+            if "title" in item and item["title"].lower() == doc_name_lower and "path" in item:
                 return item["path"]
                 
             # Check children if they exist
@@ -86,16 +89,34 @@ def find_doc_path(doc_name: str) -> Optional[str]:
 def get_structure() -> Resource:
     """
     Provides document directory structure information with summaries.
-    Returns a resource containing document titles, paths and summaries that can be used with get_doc_content.
+    Returns a resource containing document titles and summaries that can be used with get_doc_content.
+    Path information is intentionally removed from the returned structure.
     """
     try:
         structure = get_doc_structure()
         
+        # 创建一个不包含 path 字段的结构副本
+        def remove_paths(items):
+            result = []
+            for item in items:
+                # 创建不带 path 的项目副本
+                new_item = {k: v for k, v in item.items() if k != 'path'}
+                
+                # 处理子项目
+                if "children" in item and isinstance(item["children"], list):
+                    new_item["children"] = remove_paths(item["children"])
+                    
+                result.append(new_item)
+            return result
+        
+        # 处理结构数据，移除 path 字段
+        clean_structure = remove_paths(structure)
+        
         # 添加额外信息
         result = {
-            "structure": structure,
+            "structure": clean_structure,
             "description": "MCP Documentation Structure with Summaries",
-            "usage": f"Documents can be accessed via '{RESOURCE_PREFIX}doc/{{doc_name}}'"
+            "usage": f"Documents can be accessed via '{RESOURCE_PREFIX}{{doc_name}}'"
         }
         
         content = json.dumps(result, ensure_ascii=False, indent=2)
@@ -111,21 +132,22 @@ def get_structure() -> Resource:
         raise Exception(error_msg)
 
 # --- Document Access By Name ---
-@mcp.resource(f"{RESOURCE_PREFIX}doc/{{doc_name}}") 
+@mcp.resource(f"{RESOURCE_PREFIX}{{doc_name}}") 
 def get_doc_content(doc_name: str) -> Resource:
     """
     Provides access to documentation by document name.
     The document name should match a title in the structure.json file.
+    Supports case-insensitive matching.
     """
     # 解码URL编码的字符，例如将 %20 转换为空格
     doc_name = urllib.parse.unquote(doc_name)
     
-    logger.info(f"Received request for document: '{doc_name}'")
+    logger.info(f"Received request for document: '{doc_name}' (case-insensitive search)")
     
-    # Find the document path in structure.json
+    # Find the document path in structure.json (now with case-insensitive search)
     doc_path = find_doc_path(doc_name)
     if not doc_path:
-        logger.error(f"Document not found: '{doc_name}'")
+        logger.error(f"Document not found: '{doc_name}' (case-insensitive search)")
         raise ValueError(f"Document '{doc_name}' not found in structure")
     
     # Remove leading slash if present
@@ -167,7 +189,7 @@ def get_doc_content(doc_name: str) -> Resource:
     try:
         content = resolved_path.read_text(encoding="utf-8")
         logger.info(f"Successfully loaded content for: {doc_name}")
-        return Resource(name=doc_name, uri=f"{RESOURCE_PREFIX}doc/{doc_name}", content=content, content_type="text/markdown")
+        return Resource(name=doc_name, uri=f"{RESOURCE_PREFIX}{doc_name}", content=content, content_type="text/markdown")
     except IOError:
         logger.error(f"Could not read file: {resolved_path}", exc_info=True)
         raise IOError(f"Could not read documentation file for document: {doc_name}")
