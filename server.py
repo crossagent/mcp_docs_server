@@ -203,4 +203,4 @@ if __name__ == "__main__":
     logger.info(f"Using structure file: {STRUCTURE_FILE.resolve()}")
     logger.info(f"Resource URI prefix: {RESOURCE_PREFIX}")
     logger.info("Starting MCP server...")
-    mcp.run()
+    mcp.run(transport = "sse")
