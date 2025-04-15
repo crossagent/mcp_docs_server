@@ -60,56 +60,56 @@ def get_introduction_statically() -> Resource:
         raise IOError(f"Could not read static resource file {file_path}: {e}")
 
 
-# --- Dynamic Resource Access (Commented out for testing listing) ---
-# # Use the @mcp.resource decorator with a simplified path parameter
-# @mcp.resource(f"{RESOURCE_PREFIX}{{doc_path}}") # Removed :path
-# def get_doc_content(doc_path: str) -> Resource: # Removed ctx: Context
-#     """
-#     Provides access to locally cached MCP documentation Markdown files
-#     based on the path captured from the URI.
-#     e.g., 'mcp://docs/concepts/tools' maps doc_path='concepts/tools'.
-#     NOTE: This function cannot use the 'ctx' object due to library constraints.
-#     """
-#     full_uri = f"{RESOURCE_PREFIX}{doc_path}" # Reconstruct full URI for Resource object
-#     # Logging removed as ctx is unavailable here
-#     # print(f"Received resource request for path: {doc_path} (URI: {full_uri})") # Optional: Use print for basic debug
-#
-#     # Basic sanitization (already partially handled by path capture, but double-check)
-#     if ".." in doc_path:
-#          # Logging removed
-#          raise ValueError("Invalid path characters requested.")
-#
-#     # Construct the full path to the markdown file
-#     # Assume paths in structure.json don't have .md, so add it here
-#     file_path = (DATA_DIR / doc_path).with_suffix(".md")
-#     # Logging removed
-#     # print(f"Attempting to access file at: {file_path}") # Optional: Use print for basic debug
-#
-#     # Check if the path resolves correctly and safely within DATA_DIR
-#     try:
-#         resolved_path = file_path.resolve(strict=True) # strict=True checks existence
-#         if DATA_DIR.resolve() not in resolved_path.parents:
-#              # Logging removed
-#              raise ValueError("Access denied: Path traversal attempt.")
-#     except FileNotFoundError:
-#         # Logging removed
-#         raise FileNotFoundError(f"Documentation file not found for path: {doc_path}")
-#     except Exception as e: # Catches other potential resolution errors
-#         # Logging removed
-#         raise ValueError(f"Error resolving file path for: {doc_path}")
-#
-#     # Read and return the file content
-#     try:
-#         content = resolved_path.read_text(encoding="utf-8")
-#         # Logging removed
-#         # Return as a simple text resource
-#         return Resource(uri=full_uri, content=content, content_type="text/markdown")
-#     except IOError as e: # Catch specific IO errors during read
-#         # Logging removed
-#         raise IOError(f"Could not read documentation file for path: {doc_path}")
-#     except Exception as e: # Catch any other unexpected errors during read
-#         # Logging removed
-#         raise Exception(f"Unexpected error reading documentation file for path: {doc_path}")
+# --- Dynamic Resource Access ---
+# Use the @mcp.resource decorator with a simplified path parameter
+@mcp.resource(f"{RESOURCE_PREFIX}{{doc_path}}") # Removed :path
+def get_doc_content(doc_path: str) -> Resource: # Removed ctx: Context
+    """
+    Provides access to locally cached MCP documentation Markdown files
+    based on the path captured from the URI.
+    e.g., 'mcp://docs/concepts/tools' maps doc_path='concepts/tools'.
+    NOTE: This function cannot use the 'ctx' object due to library constraints.
+    """
+    full_uri = f"{RESOURCE_PREFIX}{doc_path}" # Reconstruct full URI for Resource object
+    # Logging removed as ctx is unavailable here
+    # print(f"Received resource request for path: {doc_path} (URI: {full_uri})") # Optional: Use print for basic debug
+
+    # Basic sanitization (already partially handled by path capture, but double-check)
+    if ".." in doc_path:
+         # Logging removed
+         raise ValueError("Invalid path characters requested.")
+
+    # Construct the full path to the markdown file
+    # Assume paths in structure.json don't have .md, so add it here
+    file_path = (DATA_DIR / doc_path).with_suffix(".md")
+    # Logging removed
+    # print(f"Attempting to access file at: {file_path}") # Optional: Use print for basic debug
+
+    # Check if the path resolves correctly and safely within DATA_DIR
+    try:
+        resolved_path = file_path.resolve(strict=True) # strict=True checks existence
+        if DATA_DIR.resolve() not in resolved_path.parents:
+             # Logging removed
+             raise ValueError("Access denied: Path traversal attempt.")
+    except FileNotFoundError:
+        # Logging removed
+        raise FileNotFoundError(f"Documentation file not found for path: {doc_path}")
+    except Exception as e: # Catches other potential resolution errors
+        # Logging removed
+        raise ValueError(f"Error resolving file path for: {doc_path}")
+
+    # Read and return the file content
+    try:
+        content = resolved_path.read_text(encoding="utf-8")
+        # Logging removed
+        # Return as a simple text resource, adding the 'name' parameter
+        return Resource(name=doc_path, uri=full_uri, content=content, content_type="text/markdown")
+    except IOError as e: # Catch specific IO errors during read
+        # Logging removed
+        raise IOError(f"Could not read documentation file for path: {doc_path}")
+    except Exception as e: # Catch any other unexpected errors during read
+        # Logging removed
+        raise Exception(f"Unexpected error reading documentation file for path: {doc_path}")
 
 
 # --- Run Server ---
