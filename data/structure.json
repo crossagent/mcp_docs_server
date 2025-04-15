@@ -4,32 +4,36 @@
     "children": [
       {
         "title": "Introduction",
-        "path": "https://modelcontextprotocol.io/introduction"
+        "path": "/introduction"
       },
       {
         "title": "Quickstart",
         "children": [
           {
             "title": "For Server Developers",
-            "path": "https://modelcontextprotocol.io/quickstart/server"
+            "path": "/quickstart/server"
           },
           {
             "title": "For Client Developers",
-            "path": "https://modelcontextprotocol.io/quickstart/client"
+            "path": "/quickstart/client"
           },
           {
             "title": "For Claude Desktop Users",
-            "path": "https://modelcontextprotocol.io/quickstart/user"
+            "path": "/quickstart/user"
           }
         ]
       },
       {
         "title": "Example Servers",
-        "path": "https://modelcontextprotocol.io/examples"
+        "path": "/examples"
       },
       {
         "title": "Example Clients",
-        "path": "https://modelcontextprotocol.io/clients"
+        "path": "/clients"
+      },
+      {
+        "title": "FAQs",
+        "path": "/faqs"
       }
     ]
   },
@@ -38,15 +42,15 @@
     "children": [
       {
         "title": "Building MCP with LLMs",
-        "path": "https://modelcontextprotocol.io/tutorials/building-mcp-with-llms"
+        "path": "/tutorials/building-mcp-with-llms"
       },
       {
         "title": "Debugging",
-        "path": "https://modelcontextprotocol.io/docs/tools/debugging"
+        "path": "/docs/tools/debugging"
       },
       {
         "title": "Inspector",
-        "path": "https://modelcontextprotocol.io/docs/tools/inspector"
+        "path": "/docs/tools/inspector"
       }
     ]
   },
@@ -55,31 +59,31 @@
     "children": [
       {
         "title": "Core architecture",
-        "path": "https://modelcontextprotocol.io/docs/concepts/architecture"
+        "path": "/docs/concepts/architecture"
       },
       {
         "title": "Resources",
-        "path": "https://modelcontextprotocol.io/docs/concepts/resources"
+        "path": "/docs/concepts/resources"
       },
       {
         "title": "Prompts",
-        "path": "https://modelcontextprotocol.io/docs/concepts/prompts"
+        "path": "/docs/concepts/prompts"
       },
       {
         "title": "Tools",
-        "path": "https://modelcontextprotocol.io/docs/concepts/tools"
+        "path": "/docs/concepts/tools"
       },
       {
         "title": "Sampling",
-        "path": "https://modelcontextprotocol.io/docs/concepts/sampling"
+        "path": "/docs/concepts/sampling"
       },
       {
         "title": "Roots",
-        "path": "https://modelcontextprotocol.io/docs/concepts/roots"
+        "path": "/docs/concepts/roots"
       },
       {
         "title": "Transports",
-        "path": "https://modelcontextprotocol.io/docs/concepts/transports"
+        "path": "/docs/concepts/transports"
       }
     ]
   },
@@ -88,15 +92,15 @@
     "children": [
       {
         "title": "What's New",
-        "path": "https://modelcontextprotocol.io/development/updates"
+        "path": "/development/updates"
       },
       {
         "title": "Roadmap",
-        "path": "https://modelcontextprotocol.io/development/roadmap"
+        "path": "/development/roadmap"
       },
       {
         "title": "Contributing",
-        "path": "https://modelcontextprotocol.io/development/contributing"
+        "path": "/development/contributing"
       }
     ]
   }

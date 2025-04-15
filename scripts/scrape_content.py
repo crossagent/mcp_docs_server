@@ -106,39 +106,92 @@ def save_markdown(file_path: str, markdown_content: str) -> None:
     except Exception as e:
         print(f"Unexpected error saving {file_path}: {e}", file=sys.stderr)
 
-def process_structure_item(item: Dict[str, Any], base_output_dir: str) -> None:
-    """Processes a single item (page or group) from the structure."""
+def process_structure_item(item: Dict[str, Any], base_output_dir: str) -> Dict[str, Any]:
+    """处理结构项并返回带摘要的更新项"""
+    # 创建一个项目副本，以便添加摘要
+    updated_item = item.copy()
+    
     if "path" in item and isinstance(item["path"], str):
-        url = item["path"]
+        path = item["path"]
+        # 组合基础URL和相对路径，确保它是一个完整的URL
+        if path.startswith("http"):
+            url = path  # 如果已经是完整URL则直接使用
+        else:
+            # 确保path以/开头
+            if not path.startswith("/"):
+                path = "/" + path
+            url = BASE_URL + path
+            
         title = item.get("title", "Unknown Title")
         print(f"Processing '{title}': {url}", file=sys.stderr)
 
         soup = fetch_and_parse(url)
         if not soup:
-            return
+            return updated_item
 
         content_html = extract_content_html(soup)
         if not content_html:
             print(f"  No content extracted for {url}", file=sys.stderr)
-            return
+            return updated_item
 
         markdown_content = convert_to_markdown(content_html)
         if not markdown_content:
             print(f"  Markdown conversion failed for {url}", file=sys.stderr)
-            return
+            return updated_item
+            
+        # 生成内容摘要并添加到更新后的项目中
+        summary = generate_summary(markdown_content)
+        updated_item["summary"] = summary
+        print(f"  Generated summary ({len(summary)} chars)", file=sys.stderr)
 
         save_path = get_save_path(url, base_output_dir)
         if not save_path:
             print(f"  Could not determine save path for {url}", file=sys.stderr)
-            return
+            return updated_item
 
         save_markdown(save_path, markdown_content)
 
-    # Recursively process children if this item is a group
+    # 递归处理子项目
     if "children" in item and isinstance(item["children"], list):
         print(f"Processing children of '{item.get('title', 'Unnamed Group')}'...", file=sys.stderr)
+        updated_children = []
         for child_item in item["children"]:
-            process_structure_item(child_item, base_output_dir)
+            updated_child = process_structure_item(child_item, base_output_dir)
+            updated_children.append(updated_child)
+        updated_item["children"] = updated_children
+        
+    return updated_item
+
+def generate_summary(markdown_content: str, max_length: int = 300) -> str:
+    """生成Markdown内容的摘要。
+    
+    从内容开头提取文本，去除标记符号，并限制在指定长度内。
+    """
+    # 获取第一部分内容（通常是简介）
+    lines = markdown_content.split('\n')
+    
+    # 跳过标题行和空行，找到实际内容
+    content_lines = []
+    for line in lines:
+        # 跳过标题、分隔线、空行等
+        if line.strip() and not line.startswith('#') and not line.startswith('---'):
+            content_lines.append(line.strip())
+        if len(' '.join(content_lines)) >= max_length * 2:  # 获取足够长的文本以便裁剪
+            break
+    
+    # 合并内容行并限制长度
+    summary = ' '.join(content_lines)
+    if len(summary) > max_length:
+        # 尝试在句号处截断
+        if '。' in summary[:max_length+30]:  # 多看30个字符，尝试找到句号
+            summary = summary[:summary[:max_length+30].rindex('。')+1]
+        elif '.' in summary[:max_length+30]:
+            summary = summary[:summary[:max_length+30].rindex('.')+1]
+        else:
+            # 如果没有找到句号，就直接截断
+            summary = summary[:max_length] + '...'
+    
+    return summary
 
 # --- Main Execution ---
 
@@ -171,8 +224,21 @@ def main() -> None:
         return
 
     print(f"Processing {len(structure_data)} top-level items...", file=sys.stderr)
+    
+    # 收集更新后的结构
+    updated_structure = []
     for item in structure_data:
-        process_structure_item(item, OUTPUT_DATA_DIR)
+        updated_item = process_structure_item(item, OUTPUT_DATA_DIR)
+        updated_structure.append(updated_item)
+    
+    # 保存带摘要的结构文件
+    enriched_structure_path = os.path.join(OUTPUT_DATA_DIR, "structure_with_summaries.json")
+    try:
+        with open(enriched_structure_path, 'w', encoding='utf-8') as f:
+            json.dump(updated_structure, f, ensure_ascii=False, indent=2)
+        print(f"Saved enriched structure to {enriched_structure_path}", file=sys.stderr)
+    except Exception as e:
+        print(f"Error saving enriched structure: {e}", file=sys.stderr)
 
     print("Content scraping process finished.", file=sys.stderr)
 

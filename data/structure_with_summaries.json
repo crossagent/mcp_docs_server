@@ -1,0 +1,127 @@
+[
+  {
+    "title": "Get Started",
+    "children": [
+      {
+        "title": "Introduction",
+        "path": "/introduction",
+        "summary": "C# SDK released! Check out [what else is new.](/development/updates) MCP is an open protocol that standardizes how applications provide context to LLMs. Think of MCP like a USB-C port for AI applications."
+      },
+      {
+        "title": "Quickstart",
+        "children": [
+          {
+            "title": "For Server Developers",
+            "path": "/quickstart/server",
+            "summary": "In this tutorial, we’ll build a simple MCP weather server and connect it to a host, Claude for Desktop. We’ll start with a basic setup, and then progress to more complex use cases. Many LLMs do not currently have the ability to fetch the forecast and severe weather alerts."
+          },
+          {
+            "title": "For Client Developers",
+            "path": "/quickstart/client",
+            "summary": "In this tutorial, you’ll learn how to build a LLM-powered chatbot client that connects to MCP servers. It helps to have gone through the [Server quickstart](/quickstart/server) that guides you through the basic of building your first server."
+          },
+          {
+            "title": "For Claude Desktop Users",
+            "path": "/quickstart/user",
+            "summary": "In this tutorial, you will extend [Claude for Desktop](https://claude.ai/download) so that it can read from your computer’s file system, write new files, move files, and even search files. Don’t worry — it will ask you for your permission before executing these actions! Start by downloading [Claude for Desktop](https://claude."
+          }
+        ]
+      },
+      {
+        "title": "Example Servers",
+        "path": "/examples",
+        "summary": "This page showcases various Model Context Protocol (MCP) servers that demonstrate the protocol’s capabilities and versatility. These servers enable Large Language Models (LLMs) to securely access tools and data sources. These official reference servers demonstrate core MCP features and SDK usage: * **[Filesystem](https://github."
+      },
+      {
+        "title": "Example Clients",
+        "path": "/clients",
+        "summary": "This page provides an overview of applications that support the Model Context Protocol (MCP). Each client may support different MCP features, allowing for varying levels of integration with MCP servers. | Client | [Resources](https://modelcontextprotocol.io/docs/concepts/resources) | [Prompts](https://modelcontextprotocol."
+      },
+      {
+        "title": "FAQs",
+        "path": "/faqs",
+        "summary": "MCP (Model Context Protocol) is a standard way for AI applications and agents to connect to and work with your data sources (e.g. local files, databases, or content repositories) and tools (e.g. GitHub, Google Maps, or Puppeteer)."
+      }
+    ]
+  },
+  {
+    "title": "Tutorials",
+    "children": [
+      {
+        "title": "Building MCP with LLMs",
+        "path": "/tutorials/building-mcp-with-llms",
+        "summary": "This guide will help you use LLMs to help you build custom Model Context Protocol (MCP) servers and clients. We’ll be focusing on Claude for this tutorial, but you can do this with any frontier LLM. Before starting, gather the necessary documentation to help Claude understand MCP: 1. Visit <https://modelcontextprotocol."
+      },
+      {
+        "title": "Debugging",
+        "path": "/docs/tools/debugging",
+        "summary": "Effective debugging is essential when developing MCP servers or integrating them with applications. This guide covers the debugging tools and approaches available in the MCP ecosystem. This guide is for macOS. Guides for other platforms are coming soon. MCP provides several tools for debugging at different levels: 1."
+      },
+      {
+        "title": "Inspector",
+        "path": "/docs/tools/inspector",
+        "summary": "The [MCP Inspector](https://github.com/modelcontextprotocol/inspector) is an interactive developer tool for testing and debugging MCP servers."
+      }
+    ]
+  },
+  {
+    "title": "Concepts",
+    "children": [
+      {
+        "title": "Core architecture",
+        "path": "/docs/concepts/architecture",
+        "summary": "The Model Context Protocol (MCP) is built on a flexible, extensible architecture that enables seamless communication between LLM applications and integrations. This document covers the core architectural components and concepts."
+      },
+      {
+        "title": "Resources",
+        "path": "/docs/concepts/resources",
+        "summary": "Resources are a core primitive in the Model Context Protocol (MCP) that allow servers to expose data and content that can be read by clients and used as context for LLM interactions. Resources are designed to be **application-controlled**, meaning that the client application can decide how and when they should be used."
+      },
+      {
+        "title": "Prompts",
+        "path": "/docs/concepts/prompts",
+        "summary": "Prompts enable servers to define reusable prompt templates and workflows that clients can easily surface to users and LLMs. They provide a powerful way to standardize and share common LLM interactions."
+      },
+      {
+        "title": "Tools",
+        "path": "/docs/concepts/tools",
+        "summary": "Tools are a powerful primitive in the Model Context Protocol (MCP) that enable servers to expose executable functionality to clients. Through tools, LLMs can interact with external systems, perform computations, and take actions in the real world."
+      },
+      {
+        "title": "Sampling",
+        "path": "/docs/concepts/sampling",
+        "summary": "Sampling is a powerful MCP feature that allows servers to request LLM completions through the client, enabling sophisticated agentic behaviors while maintaining security and privacy. This feature of MCP is not yet supported in the Claude Desktop client. The sampling flow follows these steps: 1."
+      },
+      {
+        "title": "Roots",
+        "path": "/docs/concepts/roots",
+        "summary": "Roots are a concept in MCP that define the boundaries where servers can operate. They provide a way for clients to inform servers about relevant resources and their locations. A root is a URI that a client suggests a server should focus on. When a client connects to a server, it declares which roots the server should work with."
+      },
+      {
+        "title": "Transports",
+        "path": "/docs/concepts/transports",
+        "summary": "Transports in the Model Context Protocol (MCP) provide the foundation for communication between clients and servers. A transport handles the underlying mechanics of how messages are sent and received. MCP uses [JSON-RPC](https://www.jsonrpc.org/) 2.0 as its wire format."
+      }
+    ]
+  },
+  {
+    "title": "Development",
+    "children": [
+      {
+        "title": "What's New",
+        "path": "/development/updates",
+        "summary": "[​](#2025-04-10) 2025-04-10 Java SDK 0.9.0 released * Version [0.9.0](https://github.com/modelcontextprotocol/java-sdk/releases/tag/v0.9.0) of the MCP Java SDK has been released."
+      },
+      {
+        "title": "Roadmap",
+        "path": "/development/roadmap",
+        "summary": "Last updated: **2025-03-27** The Model Context Protocol is rapidly evolving. This page outlines our current thinking on key priorities and direction for approximately **the next six months**, though these may change significantly as the project develops."
+      },
+      {
+        "title": "Contributing",
+        "path": "/development/contributing",
+        "summary": "We welcome contributions from the community! Please review our [contributing guidelines](https://github.com/modelcontextprotocol/.github/blob/main/CONTRIBUTING.md) for details on how to submit changes. All contributors must adhere to our [Code of Conduct](https://github.com/modelcontextprotocol/.github/blob/main/CODE_OF_CONDUCT."
+      }
+    ]
+  }
+]

@@ -1,120 +1,184 @@
 # e:/mcp_docs_server/server.py
 import json
 import os
+import logging
+import urllib.parse  # 添加这个导入
 from pathlib import Path
-from typing import Any, Dict, List, Union
+from typing import Any, Dict, List, Union, Optional
 
-from mcp import Resource # Resource seems ok here
-# ResourceError not found, use standard Python exceptions
+from mcp import Resource
 from mcp.server.fastmcp import Context, FastMCP
+
+# --- Configure Logging ---
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    handlers=[
+        logging.StreamHandler(),
+        logging.FileHandler('mcp_docs_server.log')
+    ]
+)
+logger = logging.getLogger('mcp_docs_server')
 
 # --- Constants ---
 DATA_DIR = Path(__file__).parent / "data"
 STRUCTURE_FILE = DATA_DIR / "structure.json"
+STRUCTURE_WITH_SUMMARIES_FILE = DATA_DIR / "structure_with_summaries.json"  # 添加新的结构文件路径
 RESOURCE_PREFIX = "mcp://docs/"
 
 # --- MCP Server Instance ---
 mcp = FastMCP("MCPDocsAssistant")
 
-# --- Tool: Get Documentation Structure ---
-@mcp.tool()
-def get_docs_structure(ctx: Context) -> Union[List[Dict[str, Any]], str]:
-    """
-    Retrieves the hierarchical structure of the locally cached MCP documentation.
+# --- Document Structure Cache ---
+_structure_cache = None
 
+def get_doc_structure():
+    """
+    Load and cache the document structure from structure_with_summaries.json 
+    or fall back to structure.json if not available.
+    Returns the structure as a Python object.
+    """
+    global _structure_cache
+    
+    if _structure_cache is None:
+        try:
+            # 尝试优先读取带摘要的结构文件
+            structure_file = STRUCTURE_WITH_SUMMARIES_FILE if STRUCTURE_WITH_SUMMARIES_FILE.exists() else STRUCTURE_FILE
+            
+            with open(structure_file, "r", encoding="utf-8") as f:
+                _structure_cache = json.load(f)
+                logger.info(f"Document structure loaded and cached from {structure_file.name}")
+        except Exception as e:
+            logger.error(f"Failed to load document structure: {str(e)}", exc_info=True)
+            raise
+            
+    return _structure_cache
+
+def find_doc_path(doc_name: str) -> Optional[str]:
+    """
+    Find the document path by its name in the structure.json.
+    
+    Args:
+        doc_name: The document name to search for
+        
     Returns:
-        Union[List[Dict[str, Any]], str]: A list representing the nested structure
-                                          of the documentation, or an error message string.
+        The path if found, None otherwise
     """
-    ctx.info(f"Attempting to read documentation structure from: {STRUCTURE_FILE}")
-    if not STRUCTURE_FILE.is_file():
-        ctx.error(f"Structure file not found: {STRUCTURE_FILE}")
-        return f"Error: Documentation structure file not found at {STRUCTURE_FILE}"
+    structure = get_doc_structure()
+    
+    def search_in_section(items):
+        for item in items:
+            # Check if this item matches
+            if item.get("title") == doc_name and "path" in item:
+                return item["path"]
+                
+            # Check children if they exist
+            if "children" in item:
+                result = search_in_section(item["children"])
+                if result:
+                    return result
+        return None
+    
+    return search_in_section(structure)
+
+# --- Structure Resource ---
+@mcp.resource(f"{RESOURCE_PREFIX}structure")
+def get_structure() -> Resource:
+    """
+    Provides document directory structure information with summaries.
+    Returns a resource containing document titles, paths and summaries that can be used with get_doc_content.
+    """
     try:
-        with open(STRUCTURE_FILE, "r", encoding="utf-8") as f:
-            structure = json.load(f)
-        ctx.info("Successfully loaded documentation structure.")
-        return structure
-    except json.JSONDecodeError as e:
-        ctx.error(f"Error decoding JSON from {STRUCTURE_FILE}: {e}")
-        return f"Error: Could not decode structure file {STRUCTURE_FILE}. Invalid JSON."
+        structure = get_doc_structure()
+        
+        # 添加额外信息
+        result = {
+            "structure": structure,
+            "description": "MCP Documentation Structure with Summaries",
+            "usage": f"Documents can be accessed via '{RESOURCE_PREFIX}doc/{{doc_name}}'"
+        }
+        
+        content = json.dumps(result, ensure_ascii=False, indent=2)
+        return Resource(
+            name="structure", 
+            uri=f"{RESOURCE_PREFIX}structure", 
+            content=content, 
+            content_type="application/json"
+        )
     except Exception as e:
-        ctx.error(f"An unexpected error occurred while reading {STRUCTURE_FILE}: {e}")
-        return f"Error: An unexpected error occurred while reading the structure file."
+        error_msg = f"Error retrieving document structure: {str(e)}"
+        logger.error(error_msg, exc_info=True)
+        raise Exception(error_msg)
 
-# --- Static Resource Example (for testing listing) ---
-@mcp.resource(f"{RESOURCE_PREFIX}introduction")
-def get_introduction_statically() -> Resource:
-    """Provides static access to the introduction file for testing."""
-    doc_path = "introduction"
-    full_uri = f"{RESOURCE_PREFIX}{doc_path}"
-    file_path = (DATA_DIR / doc_path).with_suffix(".md")
-    if not file_path.is_file():
-        raise FileNotFoundError(f"Static resource file not found: {file_path}")
-    try:
-        content = file_path.read_text(encoding="utf-8")
-        # Add the required 'name' parameter
-        return Resource(name=doc_path, uri=full_uri, content=content, content_type="text/markdown")
-    except Exception as e:
-        # Simplified error handling for static example
-        raise IOError(f"Could not read static resource file {file_path}: {e}")
-
-
-# --- Dynamic Resource Access ---
-# Use the @mcp.resource decorator with a simplified path parameter
-@mcp.resource(f"{RESOURCE_PREFIX}{{doc_path}}") # Removed :path
-def get_doc_content(doc_path: str) -> Resource: # Removed ctx: Context
+# --- Document Access By Name ---
+@mcp.resource(f"{RESOURCE_PREFIX}doc/{{doc_name}}") 
+def get_doc_content(doc_name: str) -> Resource:
     """
-    Provides access to locally cached MCP documentation Markdown files
-    based on the path captured from the URI.
-    e.g., 'mcp://docs/concepts/tools' maps doc_path='concepts/tools'.
-    NOTE: This function cannot use the 'ctx' object due to library constraints.
+    Provides access to documentation by document name.
+    The document name should match a title in the structure.json file.
     """
-    full_uri = f"{RESOURCE_PREFIX}{doc_path}" # Reconstruct full URI for Resource object
-    # Logging removed as ctx is unavailable here
-    # print(f"Received resource request for path: {doc_path} (URI: {full_uri})") # Optional: Use print for basic debug
-
-    # Basic sanitization (already partially handled by path capture, but double-check)
-    if ".." in doc_path:
-         # Logging removed
-         raise ValueError("Invalid path characters requested.")
-
-    # Construct the full path to the markdown file
-    # Assume paths in structure.json don't have .md, so add it here
-    file_path = (DATA_DIR / doc_path).with_suffix(".md")
-    # Logging removed
-    # print(f"Attempting to access file at: {file_path}") # Optional: Use print for basic debug
+    # 解码URL编码的字符，例如将 %20 转换为空格
+    doc_name = urllib.parse.unquote(doc_name)
+    
+    logger.info(f"Received request for document: '{doc_name}'")
+    
+    # Find the document path in structure.json
+    doc_path = find_doc_path(doc_name)
+    if not doc_path:
+        logger.error(f"Document not found: '{doc_name}'")
+        raise ValueError(f"Document '{doc_name}' not found in structure")
+    
+    # Remove leading slash if present
+    if doc_path.startswith('/'):
+        doc_path = doc_path[1:]
+        logger.debug(f"Removed leading slash from path: {doc_path}")
+    
+    # Convert forward slashes to the platform-specific separator
+    normalized_path = os.path.normpath(doc_path)
+    logger.debug(f"Normalized path: {normalized_path}")
+    
+    # Split the path into components to handle platform-specific path construction
+    path_components = normalized_path.split(os.path.sep)
+    
+    # Build the file path using proper platform-specific path joining
+    file_path = DATA_DIR
+    for component in path_components:
+        if component:  # Skip empty components
+            file_path = file_path / component
+    
+    # Add .md extension
+    file_path = file_path.with_suffix(".md")
+    logger.info(f"Resolved file path: {file_path}")
 
     # Check if the path resolves correctly and safely within DATA_DIR
     try:
-        resolved_path = file_path.resolve(strict=True) # strict=True checks existence
-        if DATA_DIR.resolve() not in resolved_path.parents:
-             # Logging removed
-             raise ValueError("Access denied: Path traversal attempt.")
+        resolved_path = file_path.resolve(strict=True)  # strict=True checks existence
+        if DATA_DIR.resolve() not in resolved_path.parents and DATA_DIR.resolve() != resolved_path:
+            logger.warning(f"Access denied: Path traversal attempt for {doc_name}")
+            raise ValueError("Access denied: Path traversal attempt.")
     except FileNotFoundError:
-        # Logging removed
-        raise FileNotFoundError(f"Documentation file not found for path: {doc_path}")
-    except Exception as e: # Catches other potential resolution errors
-        # Logging removed
-        raise ValueError(f"Error resolving file path for: {doc_path}")
+        logger.error(f"Documentation file not found: {file_path}")
+        raise FileNotFoundError(f"Documentation file not found for document: {doc_name}")
+    except Exception as e:
+        logger.error(f"Error resolving file path for: {doc_name}", exc_info=True)
+        raise ValueError(f"Error resolving file path for: {doc_name}")
 
     # Read and return the file content
     try:
         content = resolved_path.read_text(encoding="utf-8")
-        # Logging removed
-        # Return as a simple text resource, adding the 'name' parameter
-        return Resource(name=doc_path, uri=full_uri, content=content, content_type="text/markdown")
-    except IOError as e: # Catch specific IO errors during read
-        # Logging removed
-        raise IOError(f"Could not read documentation file for path: {doc_path}")
-    except Exception as e: # Catch any other unexpected errors during read
-        # Logging removed
-        raise Exception(f"Unexpected error reading documentation file for path: {doc_path}")
-
+        logger.info(f"Successfully loaded content for: {doc_name}")
+        return Resource(name=doc_name, uri=f"{RESOURCE_PREFIX}doc/{doc_name}", content=content, content_type="text/markdown")
+    except IOError:
+        logger.error(f"Could not read file: {resolved_path}", exc_info=True)
+        raise IOError(f"Could not read documentation file for document: {doc_name}")
+    except Exception as e:
+        logger.error(f"Unexpected error reading file: {resolved_path}", exc_info=True)
+        raise Exception(f"Unexpected error reading documentation file for document: {doc_name}")
 
 # --- Run Server ---
 if __name__ == "__main__":
-    print(f"Serving documentation from: {DATA_DIR.resolve()}")
-    print(f"Using structure file: {STRUCTURE_FILE.resolve()}")
-    print(f"Resource URI prefix: {RESOURCE_PREFIX}")
+    logger.info(f"Serving documentation from: {DATA_DIR.resolve()}")
+    logger.info(f"Using structure file: {STRUCTURE_FILE.resolve()}")
+    logger.info(f"Resource URI prefix: {RESOURCE_PREFIX}")
+    logger.info("Starting MCP server...")
     mcp.run()

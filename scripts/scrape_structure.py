@@ -59,19 +59,22 @@ def extract_structure(soup: BeautifulSoup) -> List[Dict[str, Any]]:
             if link:
                 title = link.get_text(strip=True)
                 relative_path = link['href']
-                full_url = urljoin(base_url, relative_path)
-                item = {"title": title, "path": full_url}
+                # 不再生成完整URL，仅保存路径部分
+                # 确保路径以/开头
+                if not relative_path.startswith('/'):
+                    relative_path = '/' + relative_path
+                item = {"title": title, "path": relative_path}
                 current_group["children"].append(item)
-                print(f"Debug: Added item: {title} ({full_url})", file=sys.stderr)
+                print(f"Debug: Added item: {title} ({relative_path})", file=sys.stderr)
             elif div_toggle:
                  # Handle expandable groups like Quickstart - needs manual mapping for now
                  title = div_toggle.get_text(strip=True)
                  if title == "Quickstart":
                      print(f"Debug: Handling special case: {title}", file=sys.stderr)
                      quickstart_group = {"title": title, "children": [
-                         {"title": "For Server Developers", "path": urljoin(base_url, "/quickstart/server")},
-                         {"title": "For Client Developers", "path": urljoin(base_url, "/quickstart/client")},
-                         {"title": "For Claude Desktop Users", "path": urljoin(base_url, "/quickstart/user")}
+                         {"title": "For Server Developers", "path": "/quickstart/server"},
+                         {"title": "For Client Developers", "path": "/quickstart/client"},
+                         {"title": "For Claude Desktop Users", "path": "/quickstart/user"}
                      ]}
                      current_group["children"].append(quickstart_group)
                  else:
