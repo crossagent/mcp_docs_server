@@ -13,10 +13,25 @@
     },
     {
       "name": "Run MCP Dev Server (Terminal)",
-      "type": "node-terminal", // 使用 node-terminal 类型
+      "type": "node-terminal",
       "request": "launch",
-      "command": "uv run mcp dev server.py", // 要执行的命令
-      "cwd": "${workspaceFolder}" // 工作目录
+      "command": "uv run mcp dev server.py",
+      "cwd": "${workspaceFolder}"
+    },
+    {
+      "name": "Docker: Python - Fastapi",
+      "type": "docker",
+      "request": "launch",
+      "preLaunchTask": "docker-run: debug",
+      "python": {
+        "pathMappings": [
+          {
+            "localRoot": "${workspaceFolder}",
+            "remoteRoot": "/app"
+          }
+        ],
+        "projectType": "fastapi"
+      }
     }
   ]
 }

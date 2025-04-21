@@ -1,0 +1,8 @@
+services:
+  mcpdocsserver:
+    image: mcpdocsserver
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+    ports:
+      - "33286:8020" # Map host port 33286 to container port 8020
